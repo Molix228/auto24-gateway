@@ -15,9 +15,7 @@ import { ListingService } from './listing.service';
           options: {
             client: {
               clientId: 'listing-service-client',
-              brokers: [
-                configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
-              ],
+              brokers: [configService.get<string>('KAFKA_BROKER') || ''],
             },
           },
         }),

@@ -8,9 +8,8 @@ import { UploadModule } from './upload/upload.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
-      cache: true,
-      expandVariables: true,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     AuthModule,
     UploadModule,

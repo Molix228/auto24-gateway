@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from 'src/auth/dto/create-user.dto';
@@ -14,6 +15,8 @@ import { AuthService } from './auth.service';
 import { LoginUserDto } from 'src/auth/dto/login-user.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
+import { Response } from 'express';
+import { RefreshJwtGuard } from './guards/refresh-jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -25,8 +28,20 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    return await this.authService.login(loginUserDto);
+  async login(
+    @Body() loginUserDto: LoginUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { user, accessToken, refreshToken } =
+      await this.authService.login(loginUserDto);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    return { user, accessToken };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -35,6 +50,17 @@ export class AuthController {
     const userId = req.user.userId;
     const user = await this.authService.get_profile(userId);
     return user;
+  }
+
+  @UseGuards(RefreshJwtGuard)
+  @Post('refresh-token')
+  async refreshAccessToken(@Req() req) {
+    const newAccessToken = await this.authService.refreshAccessToken(
+      req.user.userId,
+    );
+    console.log(newAccessToken);
+
+    return { accessToken: newAccessToken };
   }
 
   @UseGuards(JwtAuthGuard)

@@ -27,12 +27,12 @@ export class UploadService {
     });
   }
 
-  async getPresignedUrl(filename: string, fileType: string) {
+  async getPresignedUrl(filename: string, fileType: string, userId: string) {
     const bucket = this.configService.get<string>('AWS_S3_BUCKET');
     if (!bucket) {
       throw new InternalServerErrorException('AWS S3 bucket not configured');
     }
-    const key = `listings/${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(filename)}`;
+    const key = `listings/${userId}/${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(filename)}`;
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -47,5 +47,33 @@ export class UploadService {
     const fileUrl = `https://${bucket}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/${key}`;
 
     return { uploadUrl, fileUrl };
+  }
+
+  async uploadImages(images: Express.Multer.File[], userId: string) {
+    const bucket = this.configService.get<string>('AWS_S3_BUCKET');
+    if (!bucket) {
+      throw new InternalServerErrorException('AWS S3 bucket not configured');
+    }
+
+    const uploadResults = images.map(async (image) => {
+      const key = `listings/${userId}/${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(image.originalname)}`;
+      const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: image.buffer,
+        ContentType: image.mimetype,
+      });
+
+      try {
+        await this.s3.send(command);
+        return {
+          url: `https://${bucket}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/${key}`,
+        };
+      } catch (err) {
+        throw new InternalServerErrorException('Failed to upload image', err);
+      }
+    });
+
+    return Promise.all(uploadResults);
   }
 }

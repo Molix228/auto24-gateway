@@ -27,6 +27,8 @@ export class AuthService implements OnModuleInit {
     this.authClient.subscribeToResponseOf('user.get-profile');
     this.authClient.subscribeToResponseOf('user.deletebyid');
     this.authClient.subscribeToResponseOf('user.update-profile');
+    this.authClient.subscribeToResponseOf('auth.validate-refresh-token');
+    this.authClient.subscribeToResponseOf('auth.refresh-access-token');
     await this.authClient.connect();
   }
 
@@ -83,6 +85,24 @@ export class AuthService implements OnModuleInit {
       this.authClient.send('auth.validate-token', token),
     );
     if (!result) throw new InternalServerErrorException(`Token is not valid`);
+    return result;
+  }
+
+  async refreshAccessToken(id: string): Promise<string> {
+    const result = await firstValueFrom(
+      this.authClient.send('auth.refresh-access-token', id),
+    );
+    if (!result)
+      throw new InternalServerErrorException(`Refresh token is not valid`);
+    return result;
+  }
+
+  async validateRefreshToken(token: string) {
+    const result = await firstValueFrom(
+      this.authClient.send('auth.validate-refresh-token', token),
+    );
+    if (!result)
+      throw new InternalServerErrorException(`RefreshToken is not valid`);
     return result;
   }
 

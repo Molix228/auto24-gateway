@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -10,23 +11,23 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       {
         name: 'AUTH_SERVICE',
         imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'auth-service-client',
-              brokers: [
-                configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
-              ],
+        useFactory: (configService: ConfigService) => {
+          return {
+            transport: Transport.KAFKA,
+            options: {
+              client: {
+                clientId: 'auth-service-client',
+                brokers: [configService.get<string>('KAFKA_BROKER') || ''],
+              },
             },
-          },
-        }),
+          };
+        },
         inject: [ConfigService],
       },
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [AuthService, JwtAuthGuard],
+  exports: [JwtAuthGuard, AuthService],
 })
 export class AuthModule {}
