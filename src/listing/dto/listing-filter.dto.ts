@@ -1,36 +1,44 @@
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { SortOrder } from 'src/enums/sort-order.enum';
+import { PriceRangeDto } from './nested/price-range.dto';
+import { DateRangeDto } from './nested/date-range.dto';
 
 export class ListingFiltersDto {
   @IsOptional()
   @IsString()
-  searchText: string;
+  searchText?: string;
 
   @IsOptional()
-  @IsString()
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   @IsArray()
-  makes: string[];
+  @IsString({ each: true })
+  makes?: string[];
 
   @IsOptional()
-  @IsString()
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   @IsArray()
-  models: string[];
+  @IsString({ each: true })
+  models?: string[];
 
   @IsOptional()
-  @IsObject()
-  priceRange: { min: number; max: number };
+  @ValidateNested()
+  @Type(() => PriceRangeDto)
+  priceRange?: PriceRangeDto;
 
   @IsOptional()
-  @IsObject()
-  dateRange: { from: Date; to: Date };
+  @ValidateNested()
+  @Type(() => DateRangeDto)
+  dateRange?: DateRangeDto;
 
   @IsOptional()
-  @IsEnum(SortOrder, { each: true })
+  @IsEnum(SortOrder)
   sortBy: SortOrder;
 }

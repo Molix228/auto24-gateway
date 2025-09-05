@@ -1,24 +1,26 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { VehicleBodyTypesDto } from './vehicle-body-type.dto';
 import {
   IsArray,
-  IsDate,
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 
-export class CreateListingInputDto extends PartialType(VehicleBodyTypesDto) {
-  @IsString()
+export class CreateListingInputDto {
+  @IsNumber()
   @IsNotEmpty()
-  make: string;
+  makeId: number;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  model: string;
+  modelId: number;
 
-  @IsDate()
+  @IsNumber()
+  @IsNotEmpty()
+  bodyTypeId: number;
+
+  @IsDateString()
   @IsNotEmpty()
   initialReg: Date;
 

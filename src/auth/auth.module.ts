@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Partitioners } from 'kafkajs';
 
 @Module({
   imports: [
@@ -18,6 +19,16 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
               client: {
                 clientId: 'auth-service-client',
                 brokers: [configService.get<string>('KAFKA_BROKER') || ''],
+                connectionTimeout: 5000,
+                requestTimeout: 25000,
+              },
+              consumer: {
+                groupId: 'api-gateway-auth-consumer',
+                sessionTimeout: 30000,
+                heartbeatInterval: 3000,
+              },
+              producer: {
+                createPartitioner: Partitioners.LegacyPartitioner,
               },
             },
           };
