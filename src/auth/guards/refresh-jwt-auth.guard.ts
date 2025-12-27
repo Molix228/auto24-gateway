@@ -11,7 +11,6 @@ export class RefreshJwtGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const { refreshToken } = req.cookies;
-    console.log(refreshToken);
 
     if (!refreshToken) throw new UnauthorizedException('Missing token');
 

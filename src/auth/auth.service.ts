@@ -3,15 +3,14 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { plainToInstance } from 'class-transformer';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
-import { CreateUserDto } from 'src/auth/dto/create-user.dto';
-import { LoginUserDto } from 'src/auth/dto/login-user.dto';
-import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
+import { CreateUserDto } from 'src/dto/requests/create-user.dto';
+import { LoginUserDto } from 'src/dto/requests/login-user.dto';
+import { LoginUserResponse, RegisteredUserResponse } from '../dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -21,19 +20,19 @@ export class AuthService implements OnModuleInit {
   async onModuleInit() {
     // Subscribe to the topics this service will consume
     this.authClient.subscribeToResponseOf('user.exists');
-    this.authClient.subscribeToResponseOf('user.register');
-    this.authClient.subscribeToResponseOf('user.login');
+    this.authClient.subscribeToResponseOf('auth.register');
+    this.authClient.subscribeToResponseOf('auth.login');
     this.authClient.subscribeToResponseOf('auth.validate-token');
-    this.authClient.subscribeToResponseOf('user.get-profile');
-    this.authClient.subscribeToResponseOf('user.deletebyid');
-    this.authClient.subscribeToResponseOf('user.update-profile');
     this.authClient.subscribeToResponseOf('auth.validate-refresh-token');
     this.authClient.subscribeToResponseOf('auth.refresh-access-token');
+
     await this.authClient.connect();
   }
 
   // api-gateway/auth/auth.service.ts
-  async register(createUserDto: CreateUserDto) {
+  async register(
+    createUserDto: CreateUserDto,
+  ): Promise<RegisteredUserResponse> {
     try {
       const isUserExist = await lastValueFrom(
         this.authClient.send('user.exists', createUserDto.email),
@@ -46,9 +45,8 @@ export class AuthService implements OnModuleInit {
       const registerPayload = plainToInstance(Object, createUserDto);
 
       const registeredUser = await lastValueFrom(
-        this.authClient.send('user.register', registerPayload),
+        this.authClient.send('auth.register', registerPayload),
       );
-      console.log('[API_GW] User registered successfully');
       return registeredUser;
     } catch (error) {
       console.error('[API_GW] Error while registration:', error);
@@ -56,28 +54,12 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async login(loginUserDto: LoginUserDto) {
+  async login(loginUserDto: LoginUserDto): Promise<LoginUserResponse> {
     const loginPayload = plainToInstance(Object, loginUserDto);
-    return await lastValueFrom(
-      this.authClient.send('user.login', loginPayload),
+    const response = await lastValueFrom(
+      this.authClient.send('auth.login', loginPayload),
     );
-  }
-
-  async get_profile(id: string) {
-    const user = await lastValueFrom(
-      this.authClient.send('user.get-profile', id),
-    );
-    if (!user) throw new InternalServerErrorException('User not found');
-    return user;
-  }
-
-  async deleteUser(id: string) {
-    const user = await firstValueFrom(
-      this.authClient.send('user.deletebyid', id),
-    );
-    if (!user) throw new NotFoundException(`User with ID: ${id} not found`);
-    console.debug('User was Successfully DELETED from DB!');
-    return user;
+    return response;
   }
 
   async validateToken(token: string) {
@@ -104,24 +86,5 @@ export class AuthService implements OnModuleInit {
     if (!result)
       throw new InternalServerErrorException(`RefreshToken is not valid`);
     return result;
-  }
-
-  async updateUser(id: string, updateUserDto: UpdateUserDto) {
-    try {
-      const updateUserPayload = plainToInstance(Object, updateUserDto);
-      const payload = {
-        id: id,
-        ...updateUserPayload,
-      };
-      const updatedUser = await lastValueFrom(
-        this.authClient.send('user.update-profile', payload),
-      );
-      return updatedUser;
-    } catch (err) {
-      throw new InternalServerErrorException(
-        'Something went wrong',
-        err.message,
-      );
-    }
   }
 }

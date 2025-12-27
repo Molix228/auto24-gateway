@@ -1,44 +1,21 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule } from '@nestjs/microservices';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Partitioners } from 'kafkajs';
+import { createKafkaClientConfig } from 'src/configs/kafka-client.factory';
 
 @Module({
   imports: [
     ClientsModule.registerAsync([
-      {
+      createKafkaClientConfig({
         name: 'AUTH_SERVICE',
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => {
-          return {
-            transport: Transport.KAFKA,
-            options: {
-              client: {
-                clientId: 'auth-service-client',
-                brokers: [configService.get<string>('KAFKA_BROKER') || ''],
-                connectionTimeout: 5000,
-                requestTimeout: 25000,
-              },
-              consumer: {
-                groupId: 'api-gateway-auth-consumer',
-                sessionTimeout: 30000,
-                heartbeatInterval: 3000,
-              },
-              producer: {
-                createPartitioner: Partitioners.LegacyPartitioner,
-              },
-            },
-          };
-        },
-        inject: [ConfigService],
-      },
+        groupId: 'api-gateway-auth-consumer',
+      }),
     ]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard],
-  exports: [JwtAuthGuard, AuthService],
+  exports: [AuthService, JwtAuthGuard],
 })
 export class AuthModule {}

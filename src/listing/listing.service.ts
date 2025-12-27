@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { CreateListingInputDto } from './dto/create-listing-input.dto';
-import { plainToInstance } from 'class-transformer';
 import { lastValueFrom, timeout } from 'rxjs';
 import { GetListingsDto } from './dto/get-listings.dto';
 
