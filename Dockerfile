@@ -1,7 +1,7 @@
 # Build stage
 FROM node:23.10-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json yarn.lock ./
 COPY tsconfig*.json ./
 RUN yarn install --frozen-lockfile
 COPY . . 
