@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:23.10-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
@@ -9,7 +9,7 @@ RUN yarn build && \
     yarn install --production --frozen-lockfile --ignore-scripts --prefer-offline
 
 # Production stage
-FROM node:18-alpine
+FROM node:23.10-alpine
 WORKDIR /app
 
 # 1. Устанавливаем зависимости (curl для healthcheck)
