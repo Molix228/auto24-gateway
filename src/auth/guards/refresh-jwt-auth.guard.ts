@@ -1,17 +1,16 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 
 export class RefreshJwtGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
-
+  constructor(@Inject() private readonly authService: AuthService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
-
-    const refreshToken = req.cookies?.refreshToken;
+    const { refreshToken } = req.cookies;
 
     if (!refreshToken) throw new UnauthorizedException('Missing token');
 
