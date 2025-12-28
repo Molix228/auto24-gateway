@@ -8,8 +8,6 @@ import {
   Query,
   Req,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ListingService } from './listing.service';
 import { CreateListingInputDto } from './dto/create-listing-input.dto';

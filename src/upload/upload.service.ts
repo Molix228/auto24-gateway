@@ -1,4 +1,8 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -25,6 +29,30 @@ export class UploadService {
         secretAccessKey,
       },
     });
+  }
+
+  async validateFileExists(fileUrl: string): Promise<boolean> {
+    try {
+      const urlParts = fileUrl.split('.com/');
+      const key = urlParts[1];
+      const bucket = this.configService.get<string>('AWS_S3_BUCKET');
+
+      const command = new HeadObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      });
+
+      await this.s3.send(command);
+      return true;
+    } catch (error: any) {
+      if (
+        error.name === 'NotFound' ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
+        return false;
+      }
+      throw new InternalServerErrorException('Error checking S3 file: ', error);
+    }
   }
 
   async getPresignedUrl(filename: string, fileType: string, userId: string) {

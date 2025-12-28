@@ -5,9 +5,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ListingService } from './listing.service';
 import { AuthModule } from 'src/auth/auth.module';
 import { Partitioners } from 'kafkajs';
+import { UploadModule } from 'src/upload/upload.module';
 
 @Module({
   imports: [
+    UploadModule,
     AuthModule,
     ClientsModule.registerAsync([
       {
