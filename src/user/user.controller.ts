@@ -14,12 +14,35 @@ import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { GetUserResponseDto, UpdateUserDto } from 'src/dto';
 import { Response } from 'express';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('User Management')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // INFO: - GET USER PROFILE ENDPOINT
+  @ApiOperation({
+    summary: 'Get user profile',
+    description: 'Retrieves the user profile',
+  })
+  @ApiQuery({
+    name: 'Authorization',
+    required: true,
+    description: 'Bearer token',
+  })
+  @ApiResponse({
+    type: GetUserResponseDto,
+    status: 200,
+    description: 'User profile retrieved successfully.',
+  })
   @UseGuards(JwtAuthGuard)
   @Get('get_user')
   async get_user(@Req() req): Promise<GetUserResponseDto> {
@@ -28,19 +51,26 @@ export class UserController {
     return user;
   }
 
-  // INFO: - LOGOUT ENDPOINT
-  @UseGuards(JwtAuthGuard)
-  @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
-    return { message: 'Logged out successfully' };
-  }
-
   // INFO: - UPDATE USER PROFILE ENDPOINT
+  @ApiOperation({
+    summary: 'Update user profile',
+    description: 'Updates the user profile',
+  })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'The ID of the user to update',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({
+    type: UpdateUserDto,
+    description: 'The data to update the user profile',
+  })
+  @ApiResponse({
+    type: GetUserResponseDto,
+    status: 200,
+    description: 'User profile updated successfully.',
+  })
   @UseGuards(JwtAuthGuard)
   @Put('update_profile/:id')
   async update_user(
@@ -52,6 +82,20 @@ export class UserController {
   }
 
   // INFO: - DELETE USER ENDPOINT
+  @ApiQuery({
+    name: 'Authorization',
+    required: true,
+    description: 'Bearer token',
+  })
+  @ApiOperation({
+    summary: 'Delete user',
+    description: 'Deletes the user account',
+  })
+  @ApiResponse({
+    type: Object,
+    status: 200,
+    description: 'User deleted successfully.',
+  })
   @UseGuards(JwtAuthGuard)
   @Delete('delete_user')
   async delete_user(@Req() req) {

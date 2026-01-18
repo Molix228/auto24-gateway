@@ -12,24 +12,45 @@ import {
 import { ListingService } from './listing.service';
 import { CreateListingInputDto } from './dto/create-listing-input.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { ListingFiltersDto } from './dto/listing-filter.dto';
-import { PaginationDto } from './dto/pagination.dto';
 import { GetListingsDto } from './dto/get-listings.dto';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
+import { ListingResponseDto } from './dto/listing.model';
 
+class ListingResponseObject {
+  success: boolean;
+  status: number;
+  data: PaginatedResponseDto<ListingResponseDto>;
+}
+
+@ApiTags('Listings Management')
 @Controller('listing')
 export class ListingController {
   constructor(private readonly listingService: ListingService) {}
 
+  @ApiOperation({
+    summary: 'Get listings',
+    description: 'Retrieves listings based on query parameters',
+  })
+  @ApiQuery({
+    type: GetListingsDto,
+    description: 'Query parameters for filtering listings',
+  })
+  @ApiResponse({
+    type: PaginatedResponseDto,
+    status: 200,
+    description: 'Listings retrieved successfully.',
+  })
   @Get('find')
   async getListings(
-    @Query() filters: ListingFiltersDto,
-    @Query() pagination: PaginationDto,
-  ) {
-    const listingsDto = new GetListingsDto();
-    listingsDto.filters = filters;
-    listingsDto.pagination = pagination;
-
-    return await this.listingService.getListings(listingsDto);
+    @Query() query: GetListingsDto,
+  ): Promise<ListingResponseObject> {
+    const res = await this.listingService.getListings(query);
+    return {
+      success: true,
+      status: 200,
+      data: res,
+    };
   }
 
   @UseGuards(JwtAuthGuard)

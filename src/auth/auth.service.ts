@@ -4,6 +4,7 @@ import {
   Injectable,
   InternalServerErrorException,
   OnModuleInit,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { plainToInstance } from 'class-transformer';
@@ -25,6 +26,7 @@ export class AuthService implements OnModuleInit {
     this.authClient.subscribeToResponseOf('auth.validate-token');
     this.authClient.subscribeToResponseOf('auth.validate-refresh-token');
     this.authClient.subscribeToResponseOf('auth.refresh-access-token');
+    this.authClient.subscribeToResponseOf('auth.revoke-token');
 
     await this.authClient.connect();
   }
@@ -70,13 +72,26 @@ export class AuthService implements OnModuleInit {
     return result;
   }
 
-  async refreshAccessToken(id: string): Promise<string> {
-    const result = await firstValueFrom(
-      this.authClient.send('auth.refresh-access-token', id),
-    );
-    if (!result)
-      throw new InternalServerErrorException(`Refresh token is not valid`);
-    return result;
+  async refreshAccessToken(token: string): Promise<{ accessToken: string }> {
+    try {
+      const result = await lastValueFrom(
+        this.authClient.send('auth.refresh-access-token', token),
+      );
+      if (!result)
+        throw new InternalServerErrorException(`Refresh token is not valid`);
+      return result;
+    } catch (error) {
+      console.log('[API_GW] Refresh Token Error:', error);
+      throw new UnauthorizedException('Session expired');
+    }
+  }
+
+  async revokeToken(token: string): Promise<void> {
+    try {
+      await firstValueFrom(this.authClient.send('auth.revoke-token', token));
+    } catch (error) {
+      console.error('[API_GW] Revoke Token Error:', error);
+    }
   }
 
   async validateRefreshToken(token: string) {
