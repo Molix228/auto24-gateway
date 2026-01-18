@@ -18,12 +18,23 @@ import {
   LoginUserResponse,
   RegisteredUserResponse,
 } from '../dto';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // INFO: - REGISTER ENDPOINT
+  @ApiOperation({
+    summary: 'Register a new user',
+    description: 'Creates a new user account',
+  })
+  @ApiResponse({
+    type: RegisteredUserResponse,
+    status: 201,
+    description: 'User registered successfully.',
+  })
   @Post('register')
   async register(
     @Body() createUserDto: CreateUserDto,
@@ -32,6 +43,12 @@ export class AuthController {
   }
 
   // INFO: - LOGIN ENDPOINT
+  @ApiOperation({ summary: 'User login', description: 'Logs in a user' })
+  @ApiResponse({
+    type: LoginUserResponse,
+    status: 200,
+    description: 'User logged in successfully.',
+  })
   @Post('login')
   async login(
     @Body() loginUserDto: LoginUserDto,
@@ -42,7 +59,7 @@ export class AuthController {
         await this.authService.login(loginUserDto);
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         sameSite: 'none',
         path: '/',
       });
@@ -55,25 +72,53 @@ export class AuthController {
   }
 
   // INFO: - REFRESH ACCESS TOKEN ENDPOINT
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description: 'Refreshes the access token using a refresh token',
+  })
+  @ApiResponse({
+    type: Object,
+    status: 200,
+    description: 'Access token refreshed successfully.',
+  })
   @UseGuards(RefreshJwtGuard)
   @Post('refresh-token')
   async refreshAccessToken(@Req() req) {
-    const newAccessToken = await this.authService.refreshAccessToken(
-      req.user.userId,
-    );
+    const refreshToken = req.cookies['refreshToken'];
+    const { accessToken } =
+      await this.authService.refreshAccessToken(refreshToken);
 
-    return { accessToken: newAccessToken };
+    return { accessToken };
   }
 
   // INFO: - LOGOUT ENDPOINT
+  @ApiOperation({ summary: 'User logout', description: 'Logs out a user' })
+  @ApiQuery({
+    name: 'Authorization',
+    required: true,
+    description: 'Bearer token',
+  })
+  @ApiResponse({
+    type: Object,
+    status: 200,
+    description: 'User logged out successfully.',
+  })
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
+  async logout(@Req() req, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies['refreshToken'];
+
+    if (refreshToken) {
+      await this.authService.revokeToken(refreshToken);
+    }
+
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'none',
+      path: '/',
     });
+
     return { message: 'Logged out successfully' };
   }
 }

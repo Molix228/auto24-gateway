@@ -10,6 +10,8 @@ import { CreateListingInputDto } from './dto/create-listing-input.dto';
 import { lastValueFrom, timeout } from 'rxjs';
 import { GetListingsDto } from './dto/get-listings.dto';
 import { UploadService } from 'src/upload/upload.service';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
+import { ListingResponseDto } from './dto/listing.model';
 
 @Injectable()
 export class ListingService implements OnModuleInit {
@@ -19,15 +21,22 @@ export class ListingService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    this.listingClient.subscribeToResponseOf('listing.find');
     this.listingClient.subscribeToResponseOf('listing.create-ad');
     this.listingClient.subscribeToResponseOf('listing.delete-ad');
 
     await this.listingClient.connect();
   }
-  async getListings(listingsDto: GetListingsDto) {
+  async getListings(
+    listingsDto: GetListingsDto,
+  ): Promise<PaginatedResponseDto<ListingResponseDto>> {
     try {
+      const payload = {
+        filters: { ...listingsDto.filters },
+        pagination: { ...listingsDto.pagination },
+      };
       const listings = await lastValueFrom(
-        this.listingClient.send('listing.find', listingsDto),
+        this.listingClient.send('listing.find', payload),
       );
       if (!listings)
         throw new InternalServerErrorException('Failed to find listings');
