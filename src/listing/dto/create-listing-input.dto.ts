@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsDate,
   IsDateString,
   IsNotEmpty,
   IsNumber,
@@ -20,7 +21,7 @@ export class CreateListingInputDto {
   @IsNotEmpty()
   bodyTypeId: number;
 
-  @IsDateString()
+  @IsDate()
   @IsNotEmpty()
   initialReg: Date;
 

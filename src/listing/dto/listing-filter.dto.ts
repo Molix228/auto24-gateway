@@ -2,7 +2,6 @@ import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -14,7 +13,7 @@ import { DateRangeDto } from './nested/date-range.dto';
 export class ListingFiltersDto {
   @IsOptional()
   @IsString()
-  searchText?: string;
+  searchText?: string = '';
 
   @IsOptional()
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
@@ -40,5 +39,5 @@ export class ListingFiltersDto {
 
   @IsOptional()
   @IsEnum(SortOrder)
-  sortBy: SortOrder;
+  sortBy: SortOrder = SortOrder.PRICE_DESC;
 }
