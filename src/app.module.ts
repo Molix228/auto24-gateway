@@ -5,6 +5,7 @@ import { ListingModule } from './listing/listing.module';
 import { UploadModule } from './upload/upload.module';
 import { UserModule } from './user/user.module';
 import { HealthModule } from './health/health.module';
+import { VehicleDataModule } from './vehicles/vehicle-data.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { HealthModule } from './health/health.module';
     UploadModule,
     ListingModule,
     UserModule,
+    VehicleDataModule,
   ],
   controllers: [],
   providers: [],

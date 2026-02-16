@@ -64,4 +64,36 @@ export class ListingController {
   async deleteAd(@Param('id') id: string, @Req() req) {
     return this.listingService.deleteAd(id, req.user.userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-listings')
+  @ApiOperation({
+    summary: 'Get user listings',
+    description: 'Retrieves listings created by the authenticated user',
+  })
+  async getMyListings(@Req() req): Promise<ListingResponseObject> {
+    const userId = req.user.userId;
+    const listingsQuery = new GetListingsDto();
+    listingsQuery.filters.userId = userId;
+    const res = await this.listingService.getListings(listingsQuery);
+    return {
+      success: true,
+      status: 200,
+      data: res,
+    };
+  }
+
+  @Get('seed-makes')
+  async seedMakes() {
+    return this.listingService.seedMakes();
+  }
+  @Get('seed-models')
+  async seedModels() {
+    return this.listingService.seedModels();
+  }
+
+  @Get('seed-models-by-make/:makeId')
+  async seedModelsByMake(@Param('makeId') makeId: number) {
+    return await this.listingService.seedModelsByMake(makeId);
+  }
 }

@@ -12,7 +12,7 @@ export class GetListingsDto {
   @ValidateNested()
   @IsDefined()
   @Type(() => ListingFiltersDto)
-  filters: ListingFiltersDto;
+  filters: ListingFiltersDto = new ListingFiltersDto();
 
   @ApiProperty({
     type: PaginationDto,
@@ -21,5 +21,5 @@ export class GetListingsDto {
   @ValidateNested()
   @IsDefined()
   @Type(() => PaginationDto)
-  pagination: PaginationDto;
+  pagination: PaginationDto = new PaginationDto();
 }

@@ -24,6 +24,11 @@ export class ListingService implements OnModuleInit {
     this.listingClient.subscribeToResponseOf('listing.find');
     this.listingClient.subscribeToResponseOf('listing.create-ad');
     this.listingClient.subscribeToResponseOf('listing.delete-ad');
+    this.listingClient.subscribeToResponseOf('listing.insert-makes');
+    this.listingClient.subscribeToResponseOf('listing.insert-models');
+    this.listingClient.subscribeToResponseOf('listing.insert-models-by-make');
+    this.listingClient.subscribeToResponseOf('vehicle-data.get-makes');
+    this.listingClient.subscribeToResponseOf('vehicle-data.get-models');
 
     await this.listingClient.connect();
   }
@@ -94,6 +99,53 @@ export class ListingService implements OnModuleInit {
     } catch (err) {
       console.error('[ListingService] Error deleting ad:', err);
       throw new InternalServerErrorException('Error deleting ad', err.message);
+    }
+  }
+
+  async seedMakes(): Promise<void> {
+    try {
+      const request = await lastValueFrom(
+        this.listingClient.send('listing.insert-makes', {}),
+      );
+      if (!request)
+        throw new InternalServerErrorException('Failed to seed makes');
+    } catch (error) {
+      console.error('[ListingService] Error seed makes:', error);
+      throw new InternalServerErrorException('Error seed makes', error.mesage);
+    }
+  }
+
+  async seedModels(): Promise<void> {
+    try {
+      const request = await lastValueFrom(
+        this.listingClient.send('listing.insert-models', {}),
+      );
+      if (!request)
+        throw new InternalServerErrorException('Failed to seed models');
+    } catch (error) {
+      console.error('[ListingService] Error seed models:', error);
+      throw new InternalServerErrorException('Error seed models', error.mesage);
+    }
+  }
+
+  async seedModelsByMake(makeId: number): Promise<void> {
+    try {
+      const request = await lastValueFrom(
+        this.listingClient.send('listing.insert-models-by-make', { makeId }),
+      );
+      if (!request)
+        throw new InternalServerErrorException(
+          'Failed to seed models for makeId: ' + makeId,
+        );
+    } catch (error) {
+      console.error(
+        `[ListingService] Error seed models for makeId ${makeId}:`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        `Error seed models for makeId ${makeId}`,
+        error.mesage,
+      );
     }
   }
 }

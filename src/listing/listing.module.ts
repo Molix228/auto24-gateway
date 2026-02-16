@@ -19,7 +19,9 @@ import { UploadModule } from 'src/upload/upload.module';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'listing-service-client',
+              clientId:
+                'listing-service-client-' +
+                Math.random().toString(36).substring(7),
               brokers: [configService.get<string>('KAFKA_BROKER') || ''],
               connectionTimeout: 3000,
               requestTimeout: 25000,
@@ -40,6 +42,6 @@ import { UploadModule } from 'src/upload/upload.module';
   ],
   controllers: [ListingController],
   providers: [ListingService],
-  exports: [ListingService],
+  exports: [ListingService, ClientsModule],
 })
 export class ListingModule {}

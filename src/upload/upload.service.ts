@@ -78,6 +78,9 @@ export class UploadService {
   }
 
   async uploadImages(images: Express.Multer.File[], userId: string) {
+    if (!images || images.length === 0) {
+      throw new InternalServerErrorException('No images provided for upload');
+    }
     const bucket = this.configService.get<string>('AWS_S3_BUCKET');
     if (!bucket) {
       throw new InternalServerErrorException('AWS S3 bucket not configured');
