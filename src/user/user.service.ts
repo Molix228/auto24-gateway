@@ -47,11 +47,11 @@ export class UserService implements OnModuleInit {
     return user;
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto) {
+  async updateUser(userId: string, updateUserDto: UpdateUserDto) {
     try {
       const updateUserPayload = plainToInstance(Object, updateUserDto);
       const payload = {
-        id: id,
+        id: userId,
         ...updateUserPayload,
       };
       const updatedUser = await lastValueFrom(

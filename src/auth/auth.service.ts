@@ -1,5 +1,7 @@
 import {
   ConflictException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -57,11 +59,22 @@ export class AuthService implements OnModuleInit {
   }
 
   async login(loginUserDto: LoginUserDto): Promise<LoginUserResponse> {
-    const loginPayload = plainToInstance(Object, loginUserDto);
-    const response = await lastValueFrom(
-      this.authClient.send('auth.login', loginPayload),
-    );
-    return response;
+    try {
+      const loginPayload = plainToInstance(Object, loginUserDto);
+      return await lastValueFrom(
+        this.authClient.send('auth.login', loginPayload),
+      );
+    } catch (error) {
+      const status =
+        [error?.statusCode, error?.status, error?.response?.statusCode].find(
+          Number.isInteger,
+        ) || HttpStatus.INTERNAL_SERVER_ERROR;
+
+      const message =
+        error?.message || error?.response?.message || 'Internal server error';
+
+      throw new HttpException(message, status);
+    }
   }
 
   async validateToken(token: string) {
