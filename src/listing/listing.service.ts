@@ -86,7 +86,7 @@ export class ListingService implements OnModuleInit {
     }
   }
 
-  async deleteAd(id: string, userId: string): Promise<void> {
+  async deleteAd(id: string, userId: string): Promise<boolean> {
     try {
       const listing = await lastValueFrom(
         this.listingClient
